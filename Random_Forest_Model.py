@@ -10,9 +10,10 @@ class RandomForest():
     #numoftrees is an int for the number of trees
     #max depth is the maxium depth used in prediction
     #threashold_split is an int that is the threashold decrease of parent's SSE. Ex: .01 means a required 1% decrease from parents SSE for split to occur at that node
-    def __init__(self, data, explain_vars, out_put, numberoftrees = 10, max_depth = 8, threashold_split = 0.01, min_nodes_for_split = 4):
+    #min_data_for_split controls the min number of data points required for a node to split. Must be postive int <1
+    def __init__(self, data, explain_vars, out_put, numberoftrees = 10, max_depth = 8, threashold_split = 0.01, min_data_for_split = 4):
         self.__data = data
-        self.__min_nodes_for_split = min_nodes_for_split
+        self.__min_data_for_split = min_data_for_split
         self.__num_trees = numberoftrees
         self.__x_var = explain_vars
         self.__y_var = out_put
@@ -27,7 +28,7 @@ class RandomForest():
             bootstrapped = self.__data.sample(replace = True, frac = .33)
             bootstrapped = bootstrapped.reset_index(drop = True)
             x_var = self.__sqrt_random_selection()
-            tree = DecisionTree(bootstrapped,x_var,self.__y_var, max_height= self.__depth, threashold= self.__threashold, min_nodes= self.__min_nodes_for_split)
+            tree = DecisionTree(bootstrapped,x_var,self.__y_var, max_height= self.__depth, threashold= self.__threashold, min_nodes= self.__min_data_for_split)
             forest_array.append(tree)
         return forest_array
 #Non private function to predict value for a passed pandas row object
