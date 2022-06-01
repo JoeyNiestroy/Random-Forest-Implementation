@@ -15,11 +15,11 @@ class DecisionTree():
             self.rc = None
             
             
-#Data should be a Pandas Dataframe
-#x_ata should a list of column names that are the explainitory variables 
-#y_ata should entered as a string and is the column name of the predicted variable
-#max height is the maxium depth used in prediction
-#threashold is an int that is the threashold decrease of parent's SSE. Ex: .01 means a required 1% decrease from parents SSE for split to occur at that node
+    """Data should be a Pandas Dataframe
+    x_data should a list of column names that are the explainitory variables 
+    y_data should entered as a string and is the column name of the predicted variable
+    max height is the maxium depth used in prediction
+    threashold is an int that is the threashold decrease of parent's SSE. Ex: .01 means a required 1% decrease from parents SSE for split to occur at that node"""
            
     def __init__(self, data, x_data, y_data, max_height = 8, threashold = 0, min_nodes = 4): 
         self.min_nodes = min_nodes
@@ -36,9 +36,9 @@ class DecisionTree():
         
 
 
-#function that build decsion tree when class is created
-#Conditional manages number of data points to split nodes and threashold
-#Recursivly builds tree
+    """function that build decsion tree when class is created
+    Conditional manages number of data points to split nodes and threashold
+    Recursivly builds tree"""
     def __constructor_function(self, t):
         if len(t.data) > self.min_nodes:
             t.value, t.var = self.determine_theta(t)
@@ -58,8 +58,8 @@ class DecisionTree():
     
     
     
-    #Way to long function to determine node value TODO make seprate functions for determine_theta
-    #returns value to split node and the var it uses to split at 
+    """Way to long function to determine node value TODO make seprate functions for determine_theta
+    returns value to split node and the var it uses to split at""" 
     def determine_theta(self, t):
         low_theta = None
         low_SSE = None
@@ -106,7 +106,7 @@ class DecisionTree():
             
         return low_theta, final_index
 
-#Called from constructor function and returns data to be entered to left and right child nodes    
+    """Called from constructor function and returns data to be entered to left and right child nodes  """  
     def __split_data(self, t):
         left = []
         right = []
@@ -121,7 +121,7 @@ class DecisionTree():
         return left, right
     
 
-#Public function that predicts value for entered row, requires root to be entered as function. built recursivly    
+    """Public function that predicts value for entered row, requires root to be entered as function. built recursivly"""    
     def predict_value(self, row, t):
         self.height += 1
         if self.height >= self.max_h:
@@ -138,23 +138,23 @@ class DecisionTree():
                 return self.predict_value(row, t.rc)
     
     
-#Function to return r_squared for the decsion tree orginal data    
+    """Function to return r_squared for the decsion tree orginal data   """ 
     def r_squared(self):
         return 1 - (self.__SSR()/self.__SST())
-#Calculates SSR    
+    """Calculates SSR"""    
     def __SSR(self):
         sum = 0
         for index in self.tree_data.index:
             sum =  sum + (((self.tree_data[self.y_data][index]) - (self.predict_value(self.tree_data.iloc[index], self.root)))**2)
         return sum
-#Calculates SST
+    """Calculates SST"""
     def __SST(self):
         sum = 0
         mean = (self.tree_data[self.y_data]).mean()
         for index in self.tree_data.index:
             sum = sum + (((self.tree_data[self.y_data][index])-mean)**2)
         return sum
-#Calculates SSE used in determine theta function    
+    """Calculates SSE used in determine theta function"""   
     def __SSE(self, data):
         sum = 0
         mean = (data[self.y_data]).mean()
