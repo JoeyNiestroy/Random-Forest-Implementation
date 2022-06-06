@@ -7,4 +7,4 @@ Main.py is a simple side by side comparison of R^2 scores on test data for both 
 test_data.csv is data for linear regressions acquired from https://www.kaggle.com/datasets/hellbuoy/car-price-prediction?resource=download . 
 Conclusion: Average R^2 on clean test data for my implemention with preset hyperparameters is roughly .74-.86. Sckitlearn with similar hyperparameters is around .73-.76. However the average time to build the model in Sckitlearn is 4 seconds, while my model takes around 1 minute. I belive the reason for this differnce is in my use of the greedy algorithm, and limitations on height tracking due to my recursively built linked node approach. A more thorough analysis of Sckitlearn source code is needed to confirm these beleifs. 
 
-Future changes: In the future I plan to build the model using an array, and adding hyperparameters for splitting crteria as well as using the model for classification
+Future changes: In the future I plan to add hyperparameters for splitting crteria as well as using the model for classification. 
