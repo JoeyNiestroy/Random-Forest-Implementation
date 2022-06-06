@@ -1,7 +1,8 @@
-from Tree import DecisionTree
+from Tree_Array import DecisionTree
 import math
 import random
 import pandas as pd
+import numpy as np
 
 class RandomForest():
     """Data should be a Pandas Dataframe
@@ -23,20 +24,20 @@ class RandomForest():
 
     """Function to generate forest based on hyperparameters and it called at when class is created"""
     def __generate_forest(self):
-        forest_array = []
-        for _ in range(0, self.__num_trees):
+        forest_array = np.array([None]*self.__num_trees)
+        for x in range(0, self.__num_trees):
             bootstrapped = self.__data.sample(replace = True, frac = .33)
             bootstrapped = bootstrapped.reset_index(drop = True)
             x_var = self.__sqrt_random_selection()
             tree = DecisionTree(bootstrapped,x_var,self.__y_var, max_height= self.__depth, threashold= self.__threashold, min_nodes= self.__min_data_for_split)
-            forest_array.append(tree)
+            forest_array[x] = tree
         return forest_array
     """Non private function to predict value for a passed pandas row object"""
     
     def predict_value_for_row(self, row):
         sum = 0
         for tree in self.__forest:
-            prediction = tree.predict_value(row, tree.root)
+            prediction = tree.predict_value(row)
             sum = sum + prediction
         return sum/self.__num_trees
 
@@ -79,10 +80,12 @@ class RandomForest():
         return sum
 if __name__ == '__main__':
     df = pd.read_csv("test_data.csv")
+    df = pd.get_dummies(df, columns = ["enginelocation", "carbody"])
     train = df[0:183]
     test = df[183:]
-    x = ["highwaympg","horsepower","citympg", "stroke", "carlength","carwidth", "carheight","curbweight", "enginesize", "peakrpm"] 
+    x = ["highwaympg","horsepower","citympg", "stroke", "carlength","carwidth", "carheight","curbweight", "enginesize", "peakrpm", "enginelocation_front", "enginelocation_rear", 
+    "carbody_convertible","carbody_hardtop", "carbody_hatchback", "carbody_sedan",	"carbody_wagon"] 
     y = "price"
-    model = RandomForest(train,x,y, numberoftrees= 135, max_depth= 12, threashold_split= .01)
+    model = RandomForest(train,x,y, numberoftrees= 135, max_depth= 6, threashold_split= .01)
     print(model.r_squared_for_test_data(test))
 
