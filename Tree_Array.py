@@ -27,15 +27,25 @@ class DecisionTree():
     def __init__(self, data, x_data, y_data, max_height = None, threashold = 0, min_nodes = 4): 
         self.min_nodes = min_nodes
         self.tree_data = data
+        self.np_data = self.tree_data.to_numpy()
         self.x_data = x_data
         self.y_data = y_data
         self.threashold = threashold
         self.max_h = max_height
-        self.y_index = self.tree_data.columns.get_loc(y_data)
+        self.dic = self.__create_dic()
         self.tree_array = np.array([None]*self.__determine_array())
-        self.node = DecisionTree.Node(data)
+        self.node = DecisionTree.Node(self.np_data)
         self.tree_array[0] = self.node
         self.root = self.__constructor_function(self.node)
+
+    """Function to map column names to their index in Array"""
+    def __create_dic(self):
+        col = self.x_data
+        dic = {}
+        for column in col:
+            dic[column] = self.tree_data.columns.get_loc(column)
+        dic[self.y_data] = self.tree_data.columns.get_loc(self.y_data)
+        return dic
     
     """"Determines Max size possible for decsion tree array"""
     def __determine_array(self):
@@ -44,7 +54,7 @@ class DecisionTree():
 
 
     """function that build decsion tree when class is created
-    Conditional manages number of data points to split nodes and threashold
+    Conditionals manage number of data points to split nodes, threshold, and height 
     Recursivly builds tree"""
     def __constructor_function(self, t):
         if len(t.data) > self.min_nodes:
@@ -52,8 +62,6 @@ class DecisionTree():
             if t.value is None or t.var is None:
                 return t
             left_data, right_data = self.__split_data(t)
-            left_data = left_data.reset_index(drop = True)
-            right_data = right_data.reset_index(drop = True)
             left_child =  DecisionTree.Node(left_data)
             right_child =  DecisionTree.Node(right_data)
             left_child.index = (t.index*2)+1
@@ -76,66 +84,45 @@ class DecisionTree():
         final_index = None
         data_set = t.data
         """Loop for greedy algorthim to determine best var to split at"""
-        for index_value in range(len(self.x_data)):
-            index_x = index_value
+        for index_value in self.x_data:
+            index_x = self.dic[index_value]
             """Loop to find best value in current var to split at"""
-            for index in data_set.index:
-                starter = data_set[self.x_data[index_x]][index]
-                left = []
-                right = []
-                for index in data_set.index:
-
-                    if data_set[self.x_data[index_x]][index] <= starter:
-                        left.append(index)
-                    else:
-                        right.append(index)
-                if len(left)<0 or len(right)<0:
-                    pass
+            for row in data_set:
+                starter = row[index_x]
+                left = data_set[np.where(data_set[:,index_x]<= starter)]
+                right = data_set[np.where(data_set[:,index_x]> starter)]
+                SSE_right = self.__SSE(right)
+                SSE_left = self.__SSE(left)
+                final_SSE = (SSE_left+SSE_right)
+                if final_SSE >= (self.__SSE(data_set)*(1-self.threashold)):
+                    break
+                if low_theta is  None:
+                    low_theta = starter
+                    low_SSE = final_SSE
+                    final_index = index_x
                 else:
-                    left_data = data_set.iloc[left]
-
-                    right_data = data_set.iloc[right]
-
-                    SSE_right = self.__SSE(left_data)
-                    SSE_left = self.__SSE(right_data)
-                    final_SSE = (SSE_left+SSE_right)
-                    if final_SSE >= (self.__SSE(data_set)*(1-self.threashold)):
-                        break
-                    if low_theta is  None:
+                    if final_SSE < low_SSE:
                         low_theta = starter
                         low_SSE = final_SSE
                         final_index = index_x
                     else:
-                        if final_SSE < low_SSE:
-                            low_theta = starter
-                            low_SSE = final_SSE
-                            final_index = index_x
-                        else:
-                            pass
+                        pass
             
         return low_theta, final_index
 
     """Called from constructor function and returns data to be entered to left and right child nodes  """  
     def __split_data(self, t):
-        left = []
-        right = []
-        for index in t.data.index:
-            if t.data[self.x_data[t.var]][index] <= t.value:
-                left.append(index)
-            else:
-                right.append(index)
-        left = t.data.iloc[left]
-        right = t.data.iloc[right]
+        left = t.data[np.where(t.data[:,t.var]<= t.value)]
+        right = t.data[np.where(t.data[:,t.var]> t.value)]
         return left, right
     
 
-    """Public function that predicts value for entered row, requires root to be entered as function. built recursivly"""    
+    """Public function that predicts value for entered row, built recursivly. Row must be numpy 1d array"""    
     def predict_value(self, row, index = 0):
         t = self.tree_array[index]
         if t.var is None or t.index*2+1 > len(self.tree_array) or t.index*2+2 > len(self.tree_array):
-            est = (int((t.data[self.y_data]).mean()))
-            return est
-        if row[self.x_data[t.var]] <= t.value:
+            return np.mean(t.data[:,self.dic[self.y_data]])
+        if row[t.var] <= t.value:
                 return self.predict_value(row, index = ((t.index*2)+1))
         else:
                 return self.predict_value(row, index = ((t.index*2)+2))
@@ -147,21 +134,23 @@ class DecisionTree():
     """Calculates SSR"""    
     def __SSR(self):
         sum = 0
-        for index in self.tree_data.index:
-            sum =  sum + (((self.tree_data[self.y_data][index]) - (self.predict_value(self.tree_data.iloc[index], self.root)))**2)
+        for row in self.np_data:
+            sum =  sum + (((row[self.dic[self.y_data]]) - (self.predict_value(row)))**2)
         return sum
     """Calculates SST"""
     def __SST(self):
-        sum = 0
-        mean = (self.tree_data[self.y_data]).mean()
-        for index in self.tree_data.index:
-            sum = sum + (((self.tree_data[self.y_data][index])-mean)**2)
-        return sum
+        mean = np.mean(self.np_data[:,self.dic[self.y_data]])
+        y_array = self.np_data[:,self.dic[self.y_data]]
+        square = ((y_array-mean)**2).sum()
+        return square
     """Calculates SSE used in determine theta function"""   
     def __SSE(self, data):
-        mean = (data[self.y_data]).mean()
-        np_data = data.to_numpy()
-        y_array = np_data[:,self.y_index]
+        """Conditional to avoid RuntimeWarning"""
+        if len(data) > 0:
+            mean = np.mean(data[:,self.dic[self.y_data]])
+        else:
+            mean = 0
+        y_array = data[:,self.dic[self.y_data]]
         square = ((y_array-mean)**2).sum()
         return square
 
@@ -177,7 +166,8 @@ if __name__ == '__main__':
     y = "price"
     tester_tree = DecisionTree(df, x, y, max_height= 4, min_nodes= 6)
     print(df.iloc[80])
-    print(tester_tree.predict_value(df.iloc[80]))
+    z = df.iloc[80].to_numpy()
+    print(tester_tree.predict_value(z))
 
 
 

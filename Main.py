@@ -25,5 +25,5 @@ random_forest_model = RandomForest(df_train, x_list, y_string, numberoftrees= 13
 
 """Outputs R^2 for both models"""
 print("R^2 Score for SK forest: "+str(SK_tree_reg.score(x2,y2)))
-print(("R^2 Score for my forest: ")+str(random_forest_model.r_squared_for_test_data(df_test_2)))
+print(("R^2 Score for my forest: ")+str(random_forest_model.r_squared_for_test_data(df_test)))
 

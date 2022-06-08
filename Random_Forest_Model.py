@@ -20,6 +20,7 @@ class RandomForest():
         self.__y_var = out_put
         self.__depth = max_depth
         self.__threashold = threashold_split
+        self.__dic = self.__create_dic()
         self.__forest = self.__generate_forest()
 
     """Function to generate forest based on hyperparameters and it called at when class is created"""
@@ -63,21 +64,28 @@ class RandomForest():
         return sum
     """Function that calculates R^2 for test data that is passed in as pandas dataframe. (Requires columns to be same as dataframe built on model)"""
     def r_squared_for_test_data(self, data):
-        data = data.reset_index(drop = True)
+        data = data.to_numpy()
         return 1 - (self.__SSR_test(data)/self.__SST_test(data))
     """Private function that calculates SSR for test data"""   
     def __SSR_test(self, data_SSR):
         sum = 0
-        for index in data_SSR.index:
-            sum =  sum + (((data_SSR[self.__y_var][index]) - (self.predict_value_for_row(data_SSR.iloc[index])))**2)
+        for row in data_SSR:
+            sum =  sum + (((row[self.__dic[self.__y_var]]) - (self.predict_value_for_row(row)))**2)
         return sum
     """Private function that calculates SST for test data"""   
     def __SST_test(self, data):
-        sum = 0
-        mean = (data[self.__y_var]).mean()
-        for index in data.index:
-            sum = sum + (((data[self.__y_var][index])-mean)**2)
-        return sum
+        mean = np.mean(data[:,self.__dic[self.__y_var]])
+        y_array = data[:,self.__dic[self.__y_var]]
+        square = ((y_array-mean)**2).sum()
+        return square
+
+    def __create_dic(self):
+        col = self.__x_var
+        dic = {}
+        for column in col:
+            dic[column] = self.__data.columns.get_loc(column)
+        dic[self.__y_var] = self.__data.columns.get_loc(self.__y_var)
+        return dic
 if __name__ == '__main__':
     df = pd.read_csv("test_data.csv")
     df = pd.get_dummies(df, columns = ["enginelocation", "carbody"])
@@ -86,6 +94,6 @@ if __name__ == '__main__':
     x = ["highwaympg","horsepower","citympg", "stroke", "carlength","carwidth", "carheight","curbweight", "enginesize", "peakrpm", "enginelocation_front", "enginelocation_rear", 
     "carbody_convertible","carbody_hardtop", "carbody_hatchback", "carbody_sedan",	"carbody_wagon"] 
     y = "price"
-    model = RandomForest(train,x,y, numberoftrees= 135, max_depth= 6, threashold_split= .01)
+    model = RandomForest(train,x,y, numberoftrees= 135, max_depth= 8, threashold_split= .01)
     print(model.r_squared_for_test_data(test))
 
