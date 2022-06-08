@@ -17,6 +17,7 @@ class DecisionTree():
             self.index = 0
             
             
+            
     """Data should be a Pandas Dataframe
     x_data should a list of column names that are the explainitory variables 
     y_data should entered as a string and is the column name of the predicted variable
@@ -30,6 +31,7 @@ class DecisionTree():
         self.y_data = y_data
         self.threashold = threashold
         self.max_h = max_height
+        self.y_index = self.tree_data.columns.get_loc(y_data)
         self.tree_array = np.array([None]*self.__determine_array())
         self.node = DecisionTree.Node(data)
         self.tree_array[0] = self.node
@@ -73,17 +75,16 @@ class DecisionTree():
         low_SSE = None
         final_index = None
         data_set = t.data
-        #Loop for greedy algorthim to determine best var to split at 
+        """Loop for greedy algorthim to determine best var to split at"""
         for index_value in range(len(self.x_data)):
             index_x = index_value
-            #Loop to find best value in current var to split at
+            """Loop to find best value in current var to split at"""
             for index in data_set.index:
                 starter = data_set[self.x_data[index_x]][index]
                 left = []
                 right = []
-                #print(data_set.index)
                 for index in data_set.index:
-                    #print(index)
+
                     if data_set[self.x_data[index_x]][index] <= starter:
                         left.append(index)
                     else:
@@ -119,7 +120,6 @@ class DecisionTree():
         left = []
         right = []
         for index in t.data.index:
-            #print(index)
             if t.data[self.x_data[t.var]][index] <= t.value:
                 left.append(index)
             else:
@@ -159,11 +159,11 @@ class DecisionTree():
         return sum
     """Calculates SSE used in determine theta function"""   
     def __SSE(self, data):
-        sum = 0
         mean = (data[self.y_data]).mean()
-        for index in data.index:
-            sum = sum + (((data[self.y_data][index])-mean)**2)
-        return sum
+        np_data = data.to_numpy()
+        y_array = np_data[:,self.y_index]
+        square = ((y_array-mean)**2).sum()
+        return square
 
    
            
@@ -178,7 +178,6 @@ if __name__ == '__main__':
     tester_tree = DecisionTree(df, x, y, max_height= 4, min_nodes= 6)
     print(df.iloc[80])
     print(tester_tree.predict_value(df.iloc[80]))
-    #print(tester_tree.tree_array)
 
 
 
