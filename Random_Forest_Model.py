@@ -52,16 +52,17 @@ class RandomForest():
     """Private function that calculates SSR""" 
     def __SSR(self):
         sum = 0
-        for index in self.__data.index:
-            sum =  sum + (((self.__data[self.__y_var][index]) - (self.predict_value_for_row(self.__data.iloc[index])))**2)
+        data = self.__data.to_numpy()
+        for row in data:
+            sum =  sum + (((row[self.__dic[self.__y_var]]) - (self.predict_value_for_row(row)))**2)
         return sum
     """Private function that calculates SST"""
     def __SST(self):
-        sum = 0
-        mean = (self.__data[self.__y_var]).mean()
-        for index in self.__data.index:
-            sum = sum + (((self.__data[self.__y_var][index])-mean)**2)
-        return sum
+        data = self.__data.to_numpy()
+        mean = np.mean(data[:,self.__dic[self.__y_var]])
+        y_array = data[:,self.__dic[self.__y_var]]
+        square = ((y_array-mean)**2).sum()
+        return square
     """Function that calculates R^2 for test data that is passed in as pandas dataframe. (Requires columns to be same as dataframe built on model)"""
     def r_squared_for_test_data(self, data):
         data = data.to_numpy()
@@ -95,5 +96,5 @@ if __name__ == '__main__':
     "carbody_convertible","carbody_hardtop", "carbody_hatchback", "carbody_sedan",	"carbody_wagon"] 
     y = "price"
     model = RandomForest(train,x,y, numberoftrees= 135, max_depth= 8, threashold_split= .01)
-    print(model.r_squared_for_test_data(test))
+    print(model.r_squared_forest())
 
